@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Overtime Calculator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;500;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <main>
+    <div class="top">
+      <div class="lang" role="group" aria-label="Language">
+        <button type="button" data-l="ms">BM</button>
+        <button type="button" data-l="en">EN</button>
+      </div>
+    </div>
+    <h1>
+      <span data-i18n="title">Overtime Calculator</span>
+      <span class="by" data-i18n="by">by Fahim Suhaimi</span>
+    </h1>
+    <p class="sub" data-i18n="sub">Enter your basic salary and overtime hours.</p>
+
+    <div class="card">
+      <label for="salary" data-i18n="salary">Basic salary (RM)</label>
+      <input id="salary" type="number" inputmode="decimal" min="0" placeholder="e.g. 1700" data-i18n-ph="salaryPh">
+
+      <h2 class="tip" tabindex="0">
+        <span data-i18n="normal">Normal day</span>
+        <span class="q" aria-hidden="true">?</span>
+        <span class="tipbox" role="tooltip" data-i18n="normalTip">Monday to Friday, plus your own Saturday (week 1 and
+          3). Work hours are 8.30am to 5.30pm, so only the hours after 5.30pm count as overtime, at 1.5×.</span>
+      </h2>
+      <div class="row" data-mult="1.5"></div>
+
+      <h2 class="tip" tabindex="0">
+        <span data-i18n="off">Off day</span>
+        <span class="q" aria-hidden="true">?</span>
+        <span class="tipbox" role="tooltip" data-i18n="offTip">A day you should be off, like covering the other group's
+          Saturday. The whole shift (8.30am to 5.30pm) counts as overtime, starting at 1.5×. Ask finance when the 2× and
+          3× rates apply.</span>
+      </h2>
+      <div class="row" data-mult="1.5"></div>
+      <div class="row" data-mult="2"></div>
+      <div class="row" data-mult="3"></div>
+
+      <h2 class="tip" tabindex="0">
+        <span data-i18n="ph">Public holiday</span>
+        <span class="q" aria-hidden="true">?</span>
+        <span class="tipbox" role="tooltip" data-i18n="phTip">Working on a public holiday. Your finance sheet uses 2×
+          and 3× for these hours. Ask finance which hours use which rate.</span>
+      </h2>
+      <div class="row" data-mult="2"></div>
+      <div class="row" data-mult="3"></div>
+    </div>
+
+    <div class="slip" aria-live="polite">
+      <div class="line"><span data-i18n="hourly">Hourly rate</span><span id="hourly">RM 0.00</span></div>
+      <div class="line"><span data-i18n="hours">Total hours</span><span id="hours">0</span></div>
+      <div class="total"><span data-i18n="total">Total overtime</span><b id="total">RM 0.00</b></div>
+    </div>
+    <p class="note" data-i18n="note">Hourly rate = salary ÷ 26 days ÷ 8 hours. Each rate is rounded to 2 decimals, then
+      multiplied by your hours, the same way the finance sheet does it.</p>
+  </main>
+
+  <script>
+    const rm = n => "RM " + n.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const round2 = n => Math.round((n + 1e-9) * 100) / 100;
+    const rows = [...document.querySelectorAll(".row")];
+
+    rows.forEach(row => {
+      row.innerHTML = '<div class="rate">' + row.dataset.mult + '×<small class="r">RM 0.00</small></div>' +
+        '<input type="number" inputmode="decimal" min="0">' +
+        '<div class="pay">RM 0.00</div>';
+      row.querySelector("input").addEventListener("input", calculate);
+    });
+    document.getElementById("salary").addEventListener("input", calculate);
+
+    function calculate() {
+      const hourly = (parseFloat(document.getElementById("salary").value) || 0) / 26 / 8;
+      let total = 0, hours = 0;
+      rows.forEach(row => {
+        const rate = round2(hourly * row.dataset.mult);
+        const h = parseFloat(row.querySelector("input").value) || 0;
+        const pay = round2(rate * h);
+        row.querySelector(".r").textContent = rm(rate);
+        row.querySelector(".pay").textContent = rm(pay);
+        total += pay; hours += h;
+      });
+      document.getElementById("hourly").textContent = rm(hourly);
+      document.getElementById("hours").textContent = hours;
+      document.getElementById("total").textContent = rm(total);
+    }
+
+    const T = {
+      en: {
+        title: "Overtime Calculator", by: "by Fahim Suhaimi", sub: "Enter your basic salary and overtime hours.", salary: "Basic salary (RM)", salaryPh: "e.g. 1700",
+        normal: "Normal day", off: "Off day", ph: "Public holiday",
+        normalTip: "Monday to Friday, plus your own Saturday (week 1 and 3). Work hours are 8.30am to 5.30pm, so only the hours after 5.30pm count as overtime, at 1.5×.",
+        offTip: "A day you should be off, like covering the other group's Saturday. The whole shift (8.30am to 5.30pm) counts as overtime, starting at 1.5×. Ask finance when the 2× and 3× rates apply.",
+        phTip: "Working on a public holiday. Your finance sheet uses 2× and 3× for these hours. Ask finance which hours use which rate.",
+        hourly: "Hourly rate", hours: "Total hours", total: "Total overtime",
+        note: "Hourly rate = salary ÷ 26 days ÷ 8 hours. Each rate is rounded to 2 decimals, then multiplied by your hours, the same way the finance sheet does it.",
+        hoursPh: "Hours", hoursAt: "Hours at"
+      },
+      ms: {
+        title: "Kiraan Bayaran Bekerja Lebih Masa", by: "oleh Fahim Suhaimi", sub: "Masukkan gaji pokok dan jam kerja lebih masa anda.", salary: "Gaji pokok (RM)", salaryPh: "cth. 1700",
+        normal: "Hari biasa", off: "Hari off", ph: "Cuti umum",
+        normalTip: "Isnin hingga Jumaat, termasuk Sabtu giliran anda sendiri (minggu 1 dan 3). Waktu kerja 8.30 pagi hingga 5.30 petang, jadi hanya jam selepas 5.30 petang dikira kerja lebih masa, pada kadar 1.5×.",
+        offTip: "Hari yang sepatutnya anda cuti, contohnya ganti Sabtu kumpulan lain. Seluruh syif (8.30 pagi hingga 5.30 petang) dikira kerja lebih masa, bermula pada 1.5×. Tanya bahagian kewangan bila kadar 2× dan 3× digunakan.",
+        phTip: "Bekerja pada cuti umum. Jadual kewangan anda guna 2× dan 3× untuk jam ini. Tanya bahagian kewangan jam mana guna kadar mana.",
+        hourly: "Kadar sejam", hours: "Jumlah jam", total: "Jumlah kerja lebih masa",
+        note: "Kadar sejam = gaji ÷ 26 hari ÷ 8 jam. Setiap kadar dibundarkan kepada 2 tempat perpuluhan, kemudian didarab dengan jam anda, sama seperti jadual kewangan.",
+        hoursPh: "Jam", hoursAt: "Jam pada"
+      }
+    };
+
+    function setLang(l) {
+      document.documentElement.lang = l;
+      document.title = T[l].title;
+      document.querySelectorAll("[data-i18n]").forEach(el => el.textContent = T[l][el.dataset.i18n]);
+      document.querySelectorAll("[data-i18n-ph]").forEach(el => el.placeholder = T[l][el.dataset.i18nPh]);
+      rows.forEach(row => {
+        const inp = row.querySelector("input");
+        inp.placeholder = T[l].hoursPh;
+        inp.setAttribute("aria-label", T[l].hoursAt + " " + row.dataset.mult + "×");
+      });
+      document.querySelectorAll(".lang button").forEach(b => b.setAttribute("aria-pressed", b.dataset.l === l));
+      try { localStorage.setItem("lang", l); } catch (e) { }
+    }
+
+    document.querySelectorAll(".lang button").forEach(b => b.addEventListener("click", () => setLang(b.dataset.l)));
+    let saved = null;
+    try { saved = localStorage.getItem("lang"); } catch (e) { }
+    setLang(saved === "ms" || saved === "en" ? saved : (navigator.language || "").startsWith("ms") ? "ms" : "en");
+    calculate();
+  </script>
+</body>
+
+</html>
